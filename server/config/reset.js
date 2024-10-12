@@ -4,7 +4,7 @@ import eventData from "../data/eventData.js";
 import locationData from "../data/locationData.js";
 
 const createEventTable = async () => {
-    const createTableQuery = `
+  const createTableQuery = `
       DROP TABLE IF EXISTS events;
   
       CREATE TABLE IF NOT EXISTS events (
@@ -12,93 +12,102 @@ const createEventTable = async () => {
         location VARCHAR(255) NOT NULL,
         title VARCHAR(255) NOT NULL,
         time VARCHAR(255) NOT NULL,
-        image VARCHAR(255) NOT NULL
-      )
-    `
-  
-    try {
-      await pool.query(createTableQuery)
-      console.log('🎉 events table created successfully')
-    } catch (err) {
-      console.error('⚠️ error creating events table', err)
-    }
-}
+        image TEXT NOT NULL,
+        date DATE NOT NULL,
+        remaining_years INT NOT NULL DEFAULT 0,
+        remaining_months INT NOT NULL DEFAULT 0,
+        remaining_days INT NOT NULL DEFAULT 0
+      );
+    `;
+
+  try {
+    await pool.query(createTableQuery);
+    console.log("🎉 events table created successfully");
+  } catch (err) {
+    console.error("⚠️ error creating events table", err);
+  }
+};
 
 const seedEventsTable = async () => {
-  await createEventTable()
+  await createEventTable();
 
   eventData.forEach((event) => {
-      const insertQuery = {
-      text: 'INSERT INTO events (location, title, time, image) VALUES ($1, $2, $3, $4)'
-      }
+    const insertQuery = {
+      text: "INSERT INTO events (location, title, time, date, image, remaining_years, remaining_months, remaining_days) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+    };
 
-      const values = [
-        event.location,
-        event.title,
-        event.time,
-        event.image,
-      ]
+    const values = [
+      event.location,
+      event.title,
+      event.time,
+      event.date,
+      event.image,
+      event.remaining.years || 0,  // Default to 0 if undefined or null
+      event.remaining.months || 0,  // Default to 0 if undefined or null
+      event.remaining.days || 0     // Default to 0 if undefined or null
+    ];
 
-      pool.query(insertQuery, values, (err, res) => {
+    pool.query(insertQuery, values, (err, res) => {
       if (err) {
-          console.error('⚠️ error inserting event', err)
-          return
+        console.error("⚠️ error inserting event", err);
+        return;
       }
-      console.log(`✅ ${event.title} added successfully`)
-      })
-  })
-}
+      console.log(`✅ ${event.title} added successfully`);
+    });
+  });
+};
 
-seedEventsTable()
+seedEventsTable();
 
 const createLocationTable = async () => {
   const createTableQuery = `
     DROP TABLE IF EXISTS locations;
 
-    CREATE TABLE IF NOT EXISTS locations (
-      id SERIAL PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      address VARCHAR(255) NOT NULL,
-      city VARCHAR(255) NOT NULL,
-      state VARCHAR(10) NOT NULL,
-      zip VARCHAR(255) NOT NULL,
-      image VARCHAR(255) NOT NULL
-    )
-  `
+  CREATE TABLE IF NOT EXISTS locations (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    city VARCHAR(255) NOT NULL,
+    state VARCHAR(10) NOT NULL,
+    zip VARCHAR(255) NOT NULL,
+    image TEXT NOT NULL
+);
+
+  `;
 
   try {
-    await pool.query(createTableQuery)
-    console.log('🎉 locations table created successfully')
+    await pool.query(createTableQuery);
+    console.log("🎉 locations table created successfully");
   } catch (err) {
-    console.error('⚠️ error creating locations table', err)
+    console.error("⚠️ error creating locations table", err);
   }
-}
+};
 
 const seedLocationsTable = async () => {
-  await createLocationTable()
+  await createLocationTable();
 
   locationData.forEach((location) => {
-      const insertQuery = {
-          text: 'INSERT INTO locations (name, address, city, state, zip, image) VALUES ($1, $2, $3, $4, $5, $6)'
+    const insertQuery = {
+      text: "INSERT INTO locations (name, address, city, state, zip, image) VALUES ($1, $2, $3, $4, $5, $6)",
+    };
+
+    const values = [
+      location.name,
+      location.address,
+      location.city,
+      location.state,
+      location.zip,
+      location.image,
+    ];
+
+    pool.query(insertQuery, values, (err, res) => {
+      if (err) {
+        console.error("⚠️ error inserting location", err);
+        return;
       }
+      console.log(`✅ ${location.name} added successfully`);
+    });
+  });
+};
 
-      const values = [
-          location.name,
-          location.address,
-          location.city,
-          location.state,
-          location.zip,
-          location.image
-      ]
-
-      pool.query(insertQuery, values, (err, res) => {
-          if (err) {
-              console.error('⚠️ error inserting location', err)
-              return
-          }
-          console.log(`✅ ${location.name} added successfully`)
-      })
-  })
-}
-
-seedLocationsTable()
+seedLocationsTable();
