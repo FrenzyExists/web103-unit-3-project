@@ -26,12 +26,9 @@ The following **required** functionality is completed:
 
 The following **optional** features are implemented:
 
-- [ ] An additional page shows all possible `Events` that the user can sort and filter by `Location`
-- [ ] `Events` display a countdown showing the time remaining before that event and appears with different formatting when the event has passed
+- [x] An additional page shows all possible `Events` that the user can sort and filter by `Location`
+- [x] `Events` display a countdown showing the time remaining before that event and appears with different formatting when the event has passed
 
-The following **additional** features are implemented:
-
-- [ ] List anything else that you added to improve the site's functionality!
 
 ## Video Walkthrough
 
