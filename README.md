@@ -36,7 +36,7 @@ Here's a walkthrough of implemented required features:
 
 
 GIF created with [Kap](https://getkap.co/) for macOS
-![[./gif.gif]]
+![](./gif.gif)
 
 ## Notes
 
