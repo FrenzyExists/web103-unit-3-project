@@ -1,40 +1,98 @@
-import React, { useState, useEffect } from 'react'
-import Event from '../components/Event'
-import '../css/LocationEvents.css'
+import React, { useState, useEffect } from "react";
+import Event from "../components/Event";
+import LocationsAPI from "../services/LocationsAPI";
+import EventsAPI from "../services/EventsAPI";
+import "../css/LocationEvents.css";
 
-const LocationEvents = ({index}) => {
-    const [location, setLocation] = useState([])
-    const [events, setEvents] = useState([])
+// Helper function to normalize location names into slugs
+const createSlug = (name) => {
+  return name
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9]/g, "")   // Remove special characters
+    .replace(/\s+/g, "");            // Remove all spaces
+};
 
-    return (
-        <div className='location-events'>
-            <header>
-                <div className='location-image'>
-                    <img src={location.image} />
-                </div>
+const LocationEvents = () => {
+  // Get the last part of the URL as the location slug
+  const locationName = window.location.pathname.split("/").pop().toLowerCase();
+  const [location, setLocation] = useState(null);
+  const [events, setEvents] = useState([]);
 
-                <div className='location-info'>
-                    <h2>{location.name}</h2>
-                    <p>{location.address}, {location.city}, {location.state} {location.zip}</p>
-                </div>
-            </header>
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Fetch all locations
+        const locations = await LocationsAPI.getAllLocations();
 
-            <main>
-                {
-                    events && events.length > 0 ? events.map((event, index) =>
-                        <Event
-                            key={event.id}
-                            id={event.id}
-                            title={event.title}
-                            date={event.date}
-                            time={event.time}
-                            image={event.image}
-                        />
-                    ) : <h2><i className="fa-regular fa-calendar-xmark fa-shake"></i> {'No events scheduled at this location yet!'}</h2>
-                }
-            </main>
+        // Find the location matching the URL slug
+        const selectedLocation = locations.find((location) => {
+          const locationSlug = createSlug(location.name);
+          return locationSlug === locationName;
+        });
+
+        if (!selectedLocation) {
+          console.error("No matching location found.");
+          return;
+        }
+
+        // Fetch events related to the selected location
+        const eventsData = await EventsAPI.getAllEvents();
+        const locationEvents = eventsData.filter((event) => {
+          const eventLocationSlug = createSlug(event.location);
+          return eventLocationSlug === locationName;
+        });
+
+        // Set state with the matching location and its events
+        setLocation(selectedLocation);
+        setEvents(locationEvents);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+    fetchData();
+  }, [locationName]);
+
+  // If no location is found, return a message
+  if (!location) {
+    return <h2>Location not found.</h2>;
+  }
+
+  return (
+    <div className="location-events">
+      <header>
+        <div className="location-image">
+          <img src={location.image} alt={location.name} />
         </div>
-    )
-}
 
-export default LocationEvents
+        <div className="location-info">
+          <h2>{location.name}</h2>
+          <p>
+            {location.address}, {location.city}, {location.state} {location.zip}
+          </p>
+        </div>
+      </header>
+
+      <main>
+        {events && events.length > 0 ? (
+          events.map((event) => (
+            <Event
+              key={event.id}
+              id={event.id}
+              title={event.title}
+              date={event.date}
+              time={event.time}
+              image={event.image}
+            />
+          ))
+        ) : (
+          <h2>
+            <i className="fa-regular fa-calendar-xmark fa-shake"></i>{" "}
+            {"No events scheduled at this location yet!"}
+          </h2>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default LocationEvents;
