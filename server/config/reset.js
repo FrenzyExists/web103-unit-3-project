@@ -42,9 +42,9 @@ const seedEventsTable = async () => {
       event.time,
       event.date,
       event.image,
-      event.remaining.years || 0,  // Default to 0 if undefined or null
-      event.remaining.months || 0,  // Default to 0 if undefined or null
-      event.remaining.days || 0     // Default to 0 if undefined or null
+      event.remaining.years || 0, // Default to 0 if undefined or null
+      event.remaining.months || 0, // Default to 0 if undefined or null
+      event.remaining.days || 0, // Default to 0 if undefined or null
     ];
 
     pool.query(insertQuery, values, (err, res) => {
@@ -111,3 +111,48 @@ const seedLocationsTable = async () => {
 };
 
 seedLocationsTable();
+
+const createEventLocationTable = async () => {
+  const createTableQuery = `
+    DROP TABLE IF EXISTS event_location;
+
+    CREATE TABLE IF NOT EXISTS event_location (
+      id SERIAL PRIMARY KEY,
+      event_id INT NOT NULL,
+      location_id INT NOT NULL,
+      FOREIGN KEY (event_id) REFERENCES events(id),
+      FOREIGN KEY (location_id) REFERENCES locations(id)
+    );
+  `;
+
+  try {
+    await pool.query(createTableQuery);
+    console.log("🎉 event_location table created successfully");
+  } catch (err) {
+    console.error("⚠️ error creating event_location table", err);
+  }
+};
+
+// Seed the 'event_location' table
+const seedEventLocationTable = async () => {
+  await createEventLocationTable();
+
+  // Create the mapping between events and locations
+  eventData.forEach((event, index) => {
+    const insertQuery = {
+      text: "INSERT INTO event_location (event_id, location_id) VALUES ($1, $2)",
+    };
+
+    const values = [event.id, event.location]; // event.id and location id
+
+    pool.query(insertQuery, values, (err, res) => {
+      if (err) {
+        console.error("⚠️ error inserting event-location mapping", err);
+        return;
+      }
+      console.log(`✅ Mapping for Event ID: ${event.id} added successfully`);
+    });
+  });
+};
+
+seedEventLocationTable();
