@@ -2,14 +2,15 @@ import React, { useState, useEffect } from "react";
 import Event from "../components/Event";
 import LocationsAPI from "../services/LocationsAPI";
 import EventsAPI from "../services/EventsAPI";
+import LocationEventsAPI from "../services/LocationEventsAPI";
 import "../css/LocationEvents.css";
 
 // Helper function to normalize location names into slugs
 const createSlug = (name) => {
   return name
     .toLowerCase()
-    .replace(/[^a-zA-Z0-9]/g, "")   // Remove special characters
-    .replace(/\s+/g, "");            // Remove all spaces
+    .replace(/[^a-zA-Z0-9]/g, "") // Remove special characters
+    .replace(/\s+/g, ""); // Remove all spaces
 };
 
 const LocationEvents = () => {
@@ -26,8 +27,12 @@ const LocationEvents = () => {
 
         // Find the location matching the URL slug
         const selectedLocation = locations.find((location) => {
+          console.log(location);
+
           const locationSlug = createSlug(location.name);
-          return locationSlug === locationName;
+          console.log(`location slug: ${locationSlug}`);
+
+          return locationSlug.includes(locationName);
         });
 
         if (!selectedLocation) {
@@ -37,10 +42,17 @@ const LocationEvents = () => {
 
         // Fetch events related to the selected location
         const eventsData = await EventsAPI.getAllEvents();
-        const locationEvents = eventsData.filter((event) => {
-          const eventLocationSlug = createSlug(event.location);
-          return eventLocationSlug === locationName;
+
+        const locationEventsData =
+          await LocationEventsAPI.getEventsByLocationId(selectedLocation.id);
+        console.log(locationEventsData);
+        const locationEvents = eventsData.filter((e) => {
+          return parseInt(e.location) === selectedLocation.id;
         });
+        console.log(locationEvents);
+
+        // console.log(locationEvents);
+        console.log(eventsData);
 
         // Set state with the matching location and its events
         setLocation(selectedLocation);
